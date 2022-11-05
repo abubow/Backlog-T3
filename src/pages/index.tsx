@@ -9,9 +9,27 @@ import ItemModal from "../components/ItemModal";
 
 import { HiX } from "react-icons/hi";
 
+interface backlogListProps {
+	items: ListItem[] | null;
+	title: string;
+}
 const Home: NextPage = () => {
 	const [items, setItems] = useState<ListItem[]>([]);
 	const [showModal, setShowModal] = useState(false);
+	const [backlogList, setBacklogList] = useState<backlogListProps[]>([
+		{
+			items: null,
+			title: "Todo",
+		},
+		{
+			items: null,
+			title: "In Progress",
+		},
+		{
+			items: null,
+			title: "Done",
+		},
+	]);
 	const { data: itemsData } = trpc.item.getItems.useQuery();
 	const { mutate: deleteItem } = trpc.item.deleteItem.useMutation({
 		onSuccess: (item) => {
@@ -24,6 +42,26 @@ const Home: NextPage = () => {
 			setItems(itemsData);
 		}
 	}, [itemsData]);
+
+  useEffect(() => {
+    const todo = items.filter((item) => item.stage.toUpperCase() === "TODO");
+    const inProgress = items.filter((item) => item.stage.toUpperCase() === "IN_PROGRESS");
+    const done = items.filter((item) => item.stage.toUpperCase() === "DONE");
+    setBacklogList([
+      {
+        items: todo,
+        title: "Todo",
+      },
+      {
+        items: inProgress,
+        title: "In Progress",
+      },
+      {
+        items: done,
+        title: "Done",
+      },
+    ]);
+  }, [items]);
 	return (
 		<>
 			<Head>
@@ -43,7 +81,7 @@ const Home: NextPage = () => {
 					setItems={setItems}
 				/>
 			)}
-			<main className="container mx-auto flex min-h-screen min-w-full flex-col items-center justify-start p-4">
+			<main className="container mx-auto flex min-h-screen min-w-full flex-col items-center justify-start p-8 md:p-16">
 				<div className="flex min-w-full items-center justify-between p-4">
 					<h1 className="text-4xl font-bold text-gray-700">
 						You current Backlog
@@ -54,26 +92,34 @@ const Home: NextPage = () => {
 						Add new
 					</button>
 				</div>
-				<div className="flex w-full flex-col">
-					<ul className="flex w-full flex-col items-center justify-start">
-						{items.map((item) => (
-							<li
-								key={item.id}
-								className="mb-4 flex w-full flex-col items-start justify-between rounded-lg bg-white p-4 shadow">
-								<div className="flex w-full items-center justify-between">
-									<h2 className="text-xl font-bold text-gray-700">
-										{item.name}
-									</h2>
-									<HiX
-										className="cursor-pointer text-red-500"
-										onClick={() => {
-											deleteItem({ id: item.id });
-										}}
-									/>
-								</div>
-							</li>
-						))}
-					</ul>
+				<div className="flex w-full min-h-screen items-start justify-start gap-4">
+					{backlogList.map((list, index) => (
+						<ul
+							className="flex w-full flex-col items-center justify-start rounded bg-gray-100 p-4 shadow-lg"
+							key={index}>
+              <h2 className="text-2xl font-bold text-gray-700 mb-8">
+                {list.title}
+              </h2>
+							{list.items?.map((item) => (
+								<li
+									key={item.id}
+                  draggable
+									className="mb-4 flex w-full flex-col items-start justify-between rounded-lg bg-white p-4 shadow">
+									<div className="flex w-full items-center justify-between">
+										<h2 className="text-xl font-bold text-gray-700">
+											{item.name}
+										</h2>
+										<HiX
+											className="cursor-pointer text-red-500"
+											onClick={() => {
+												deleteItem({ id: item.id });
+											}}
+										/>
+									</div>
+								</li>
+							))}
+						</ul>
+					))}
 				</div>
 			</main>
 		</>

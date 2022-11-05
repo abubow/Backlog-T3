@@ -10,7 +10,7 @@ interface ItemModalProps {
 
 const ItemModal: FC<ItemModalProps> = ({ setShowModal, setItems }) => {
 	const [name, setName] = useState<string>("");
-
+	const [description, setDescription] = useState<string>("");
 	const { mutate: addItem } = trpc.item.addItem.useMutation({
 		onSuccess: (item) => {
             setItems((prev) => [...prev, item]);
@@ -30,9 +30,15 @@ const ItemModal: FC<ItemModalProps> = ({ setShowModal, setItems }) => {
 					value={name}
 					onChange={(e) => setName(e.target.value)}
 				/>
+				<textarea
+					className="mt-4 w-full rounded-lg border border-gray-300 p-4 h-40"
+					placeholder="Item description"
+					value={description}
+					onChange={(e) => setDescription(e.target.value)}
+				/>
 				<button className="mt-4 mr-4 rounded bg-violet-500 p-4 text-white transition duration-300 ease-in-out hover:bg-violet-800"
                     onClick={() => {
-                        addItem({ name });
+                        addItem({ name , description });
                         setShowModal(false);
                     }}
                 >

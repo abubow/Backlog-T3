@@ -13,7 +13,9 @@ datasource db {
 }
 
 model ListItem {
-  id    String  @id @default(cuid())
-  name  String
-  check Boolean @default(false)
+  id          String  @id @default(cuid())
+  name        String
+  description String @default("")
+  check       Boolean @default(false)
+  stage       String  @default("todo")
 }
