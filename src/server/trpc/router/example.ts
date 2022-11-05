@@ -2,15 +2,38 @@ import { z } from "zod";
 
 import { router, publicProcedure } from "../trpc";
 
-export const exampleRouter = router({
-  hello: publicProcedure
-    .input(z.object({ text: z.string().nullish() }).nullish())
-    .query(({ input }) => {
-      return {
-        greeting: `Hello ${input?.text ?? "world"}`,
-      };
+export const itemRouter = router({
+	addItem: publicProcedure
+		.input(z.object({
+      name: z.string(),
+    }))
+		.mutation(async ({ ctx, input }) => {
+      const item = await ctx.prisma.listItem.create({
+        data: {
+          name: input.name,
+        },
+      });
+      return item;
     }),
-  getAll: publicProcedure.query(({ ctx }) => {
-    return ctx.prisma.example.findMany();
-  }),
-});
+  getItems: publicProcedure
+    .query(async ({ ctx }) => {
+      const items = await ctx.prisma.listItem.findMany();
+      return items;
+    }
+  ),
+  deleteItem: publicProcedure
+    .input(z.object({
+      id: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const item = await ctx.prisma.listItem.delete({
+        where: {
+          id: input.id,
+        },
+      });
+      return item;
+    }),
+}
+
+);
+
