@@ -35,6 +35,27 @@ export const itemRouter = router({
       });
       return item;
     }),
+  updateItem: publicProcedure
+    .input(z.object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string(),
+      stage: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const item = await ctx.prisma.listItem.update({
+        where: {
+          id: input.id,
+        },
+        data: {
+          name: input.name,
+          description: input.description,
+          stage: input.stage,
+        },
+      });
+      return item;
+    }
+  ),
 }
 
 );

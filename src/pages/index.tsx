@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import ItemModal from "../components/ItemModal";
 
 import { HiX } from "react-icons/hi";
+// arrow icon react-icons
+import { HiArrowRight } from "react-icons/hi";
 
 interface backlogListProps {
 	items: ListItem[] | null;
@@ -36,32 +38,93 @@ const Home: NextPage = () => {
 			setItems((prev) => prev.filter((i) => i.id !== item.id));
 		},
 	});
-
+	const { mutate: updateItem } = trpc.item.updateItem.useMutation({
+		onSuccess: (item) => {
+			setItems((prev) =>
+				prev.map((i) => {
+					if (i.id === item.id) {
+						return item;
+					}
+					return i;
+				})
+			);
+		},
+	});
 	useEffect(() => {
 		if (itemsData) {
 			setItems(itemsData);
 		}
 	}, [itemsData]);
 
-  useEffect(() => {
-    const todo = items.filter((item) => item.stage.toUpperCase() === "TODO");
-    const inProgress = items.filter((item) => item.stage.toUpperCase() === "IN_PROGRESS");
-    const done = items.filter((item) => item.stage.toUpperCase() === "DONE");
-    setBacklogList([
-      {
-        items: todo,
-        title: "Todo",
-      },
-      {
-        items: inProgress,
-        title: "In Progress",
-      },
-      {
-        items: done,
-        title: "Done",
-      },
-    ]);
-  }, [items]);
+	useEffect(() => {
+		// const todo = items.filter(
+		// 	(item) => item.stage.toUpperCase() === "TODO"
+		// );
+		// const inProgress = items.filter(
+		// 	(item) => item.stage.toUpperCase() === "IN_PROGRESS"
+		// );
+		// const done = items.filter(
+		// 	(item) => item.stage.toUpperCase() === "DONE"
+		// );
+		// setBacklogList([
+		// 	{
+		// 		items: todo,
+		// 		title: "Todo",
+		// 	},
+		// 	{
+		// 		items: inProgress,
+		// 		title: "In Progress",
+		// 	},
+		// 	{
+		// 		items: done,
+		// 		title: "Done",
+		// 	},
+		// ]);
+		let temp = [...backlogList];
+		temp.forEach((list) => {
+			list.items = items.filter(
+				(item) => item.stage.toUpperCase() === list.title.toUpperCase()
+			);
+		});
+		setBacklogList(temp);		
+	}, [items]);
+
+	const upStage = (item: ListItem) => {
+		// const previousStageIndex = backlogList.findIndex(
+		// 	(list) => list.title === item.stage
+		// );
+		// const newIndex = (previousStageIndex + 1)%backlogList.length;
+		// const newStage = backlogList[newIndex]?.title;
+		// setItems((prev) =>
+		// 	prev.map((i) => {
+		// 		if (i.id === item.id) {
+		// 			return { ...i, stage: newStage? newStage : "TODO" };
+		// 		}
+		// 		return i;
+		// 	})
+		// );
+		//get current stage index
+		const currentStageIndex = backlogList.findIndex(
+			(list) => list.title.toUpperCase() === item.stage.toUpperCase()
+		);
+		if (currentStageIndex === backlogList.length - 1) {
+			return;
+		}
+		/*@ts-ignore*/
+		updateItem({id: item.id, name: item.name,description: item.description, stage: backlogList[currentStageIndex + 1].title,});
+		// setItems((prev) =>
+		// 	prev.map((i) => {
+		// 		if (i.id === item.id) {
+		// 			{/*@ts-ignore*/}
+		// 			console.log(backlogList[currentStageIndex + 1].title);
+		// 			{/*@ts-ignore*/}
+		// 			return { ...i, stage: backlogList[currentStageIndex + 1].title };
+		// 		}
+		// 		return i;
+		// 	})
+		// );
+	};
+
 	return (
 		<>
 			<Head>
@@ -72,7 +135,7 @@ const Home: NextPage = () => {
 				/>
 				<link
 					rel="icon"
-					href="/favicon.ico"
+					href="/fav.svg"
 				/>
 			</Head>
 			{showModal && (
@@ -92,23 +155,28 @@ const Home: NextPage = () => {
 						Add new
 					</button>
 				</div>
-				<div className="flex w-full min-h-screen items-start justify-start gap-4">
+				<div className="flex min-h-screen w-full items-start justify-start gap-4">
 					{backlogList.map((list, index) => (
 						<ul
 							className="flex w-full flex-col items-center justify-start rounded bg-gray-100 p-4 shadow-lg"
 							key={index}>
-              <h2 className="text-2xl font-bold text-gray-700 mb-8">
-                {list.title}
-              </h2>
+							<h2 className="mb-8 text-2xl font-bold text-gray-700">
+								{list.title}
+							</h2>
+
 							{list.items?.map((item) => (
 								<li
 									key={item.id}
-                  draggable
+									draggable
 									className="mb-4 flex w-full flex-col items-start justify-between rounded-lg bg-white p-4 shadow">
 									<div className="flex w-full items-center justify-between">
 										<h2 className="text-xl font-bold text-gray-700">
 											{item.name}
 										</h2>
+										<HiArrowRight
+											className="text-2xl text-gray-500"
+											onClick={() => upStage(item)}
+										/>
 										<HiX
 											className="cursor-pointer text-red-500"
 											onClick={() => {
