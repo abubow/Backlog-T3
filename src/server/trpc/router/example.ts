@@ -56,6 +56,25 @@ export const itemRouter = router({
       return item;
     }
   ),
+  addCategory: publicProcedure
+    .input(z.object({
+      name: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const category = await ctx.prisma.category.create({
+        data: {
+          name: input.name,
+        },
+      });
+      return category;
+    }
+  ),
+  getCategories: publicProcedure
+    .query(async ({ ctx }) => {
+      const categories = await ctx.prisma.category.findMany();
+      return categories;
+    }
+  ),
 }
 
 );

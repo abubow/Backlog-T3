@@ -1,7 +1,7 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { ListItem } from "@prisma/client";
+import { Category, ListItem } from "@prisma/client";
 
 import { trpc } from "../utils/trpc";
 import { useEffect, useState } from "react";
@@ -10,6 +10,8 @@ import ItemModal from "../components/ItemModal";
 import { HiX } from "react-icons/hi";
 // arrow icon react-icons
 import { HiArrowRight } from "react-icons/hi";
+import { HiPlus } from "react-icons/hi";
+import CategoryModal from "../components/CategoryModal";
 
 interface backlogListProps {
 	items: ListItem[] | null;
@@ -18,6 +20,8 @@ interface backlogListProps {
 const Home: NextPage = () => {
 	const [items, setItems] = useState<ListItem[]>([]);
 	const [showModal, setShowModal] = useState(false);
+	const [categoryModal, setCategoryModal] = useState(false);
+	const [categories, setCategories] = useState<Category[]>([]);
 	const [backlogList, setBacklogList] = useState<backlogListProps[]>([
 		{
 			items: null,
@@ -33,6 +37,7 @@ const Home: NextPage = () => {
 		},
 	]);
 	const { data: itemsData } = trpc.item.getItems.useQuery();
+	const { data: categoriesData } = trpc.item.getCategories.useQuery();
 	const { mutate: deleteItem } = trpc.item.deleteItem.useMutation({
 		onSuccess: (item) => {
 			setItems((prev) => prev.filter((i) => i.id !== item.id));
@@ -55,7 +60,11 @@ const Home: NextPage = () => {
 			setItems(itemsData);
 		}
 	}, [itemsData]);
-
+	useEffect(() => {
+		if (categoriesData) {
+			setCategories(categoriesData);
+		}
+	}, [categoriesData]);
 	useEffect(() => {
 		// const todo = items.filter(
 		// 	(item) => item.stage.toUpperCase() === "TODO"
@@ -80,13 +89,13 @@ const Home: NextPage = () => {
 		// 		title: "Done",
 		// 	},
 		// ]);
-		let temp = [...backlogList];
+		const temp = [...backlogList];
 		temp.forEach((list) => {
 			list.items = items.filter(
 				(item) => item.stage.toUpperCase() === list.title.toUpperCase()
 			);
 		});
-		setBacklogList(temp);		
+		setBacklogList(temp);
 	}, [items]);
 
 	const upStage = (item: ListItem) => {
@@ -104,20 +113,23 @@ const Home: NextPage = () => {
 		// 	})
 		// );
 		//get current stage index
-		const currentStageIndex = backlogList.findIndex(
+		const currentStageIndex : number = backlogList.findIndex(
 			(list) => list.title.toUpperCase() === item.stage.toUpperCase()
 		);
-		if (currentStageIndex === backlogList.length - 1) {
-			return;
+		if (currentStageIndex === backlogList.length - 1 ) {
+			updateItem({
+				id: item.id,
+				name: item.name,
+				description: item.description,
+				stage: backlogList[currentStageIndex + 1].title,
+			});
 		}
-		/*@ts-ignore*/
-		updateItem({id: item.id, name: item.name,description: item.description, stage: backlogList[currentStageIndex + 1].title,});
 		// setItems((prev) =>
 		// 	prev.map((i) => {
 		// 		if (i.id === item.id) {
-		// 			{/*@ts-ignore*/}
+		// 			
 		// 			console.log(backlogList[currentStageIndex + 1].title);
-		// 			{/*@ts-ignore*/}
+		// 			
 		// 			return { ...i, stage: backlogList[currentStageIndex + 1].title };
 		// 		}
 		// 		return i;
@@ -144,6 +156,12 @@ const Home: NextPage = () => {
 					setItems={setItems}
 				/>
 			)}
+			{categoryModal && (
+				<CategoryModal
+					setCategoryModal={setCategoryModal}
+					setCategories={setCategories}
+				/>
+			)}
 			<main className="container mx-auto flex min-h-screen min-w-full flex-col items-center justify-start p-8 md:p-16">
 				<div className="flex min-w-full items-center justify-between p-4">
 					<h1 className="text-4xl font-bold text-gray-700">
@@ -158,7 +176,7 @@ const Home: NextPage = () => {
 				<div className="flex min-h-screen w-full items-start justify-start gap-4">
 					{backlogList.map((list, index) => (
 						<ul
-							className="flex w-full flex-col items-center justify-start rounded bg-gray-100 p-4 shadow-lg"
+							className="flex w-full flex-[5] flex-col items-center justify-start rounded bg-gray-100 p-4 shadow-lg"
 							key={index}>
 							<h2 className="mb-8 text-2xl font-bold text-gray-700">
 								{list.title}
@@ -173,21 +191,30 @@ const Home: NextPage = () => {
 										<h2 className="text-xl font-bold text-gray-700">
 											{item.name}
 										</h2>
-										<HiArrowRight
-											className="text-2xl text-gray-500"
-											onClick={() => upStage(item)}
-										/>
-										<HiX
-											className="cursor-pointer text-red-500"
-											onClick={() => {
-												deleteItem({ id: item.id });
-											}}
-										/>
+										<div className="flex items-center justify-center gap-4">
+											<HiArrowRight
+												className="text-2xl text-gray-500"
+												onClick={() => upStage(item)}
+											/>
+											<HiX
+												className="cursor-pointer text-red-500"
+												onClick={() => {
+													deleteItem({ id: item.id });
+												}}
+											/>
+										</div>
 									</div>
 								</li>
 							))}
 						</ul>
 					))}
+					<button className="mb-4 flex min-h-max w-full flex-1 flex-col items-center justify-between rounded-lg bg-gray-100 p-4 shadow-lg"
+						onClick={() => setCategoryModal(true)}
+					>
+						<span>
+							<HiPlus className="text-2xl text-gray-500" />
+						</span>
+					</button>
 				</div>
 			</main>
 		</>
