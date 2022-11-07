@@ -116,14 +116,29 @@ const Home: NextPage = () => {
 		const currentStageIndex : number = backlogList.findIndex(
 			(list) => list.title.toUpperCase() === item.stage.toUpperCase()
 		);
-		if (currentStageIndex === backlogList.length - 1 ) {
+		// get next stage using queue
+		const queue : string[] = [ ... backlogList.map((list) => list.title.toUpperCase())];
+		const nextStage = queue[(currentStageIndex + 1) % queue.length];
+		if (nextStage) {
 			updateItem({
 				id: item.id,
 				name: item.name,
 				description: item.description,
-				stage: backlogList[currentStageIndex + 1].title,
+				stage: nextStage,
 			});
 		}
+		// update item
+		
+
+		// const newStageIndex : number = (currentStageIndex + 1)%backlogList.length;
+		// if (!backlogList[newStageIndex]){
+		// 	updateItem({
+		// 		id: item.id,
+		// 		name: item.name,
+		// 		description: item.description,
+		// 		stage: backlogList[newStageIndex].title,
+		// });
+		// }
 		// setItems((prev) =>
 		// 	prev.map((i) => {
 		// 		if (i.id === item.id) {
